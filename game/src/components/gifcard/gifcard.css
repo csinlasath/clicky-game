@@ -1,4 +1,8 @@
-button {
-    text-align: center;
-    margin: 0 auto;
+.revealed-card:hover {
+    cursor: pointer;
+    transform: scale(1.1);
+}
+
+.revealed-card {
+    z-index: 1;
 }
