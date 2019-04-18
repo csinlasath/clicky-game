@@ -3,7 +3,27 @@
     text-align: center;
 }
 
+#empty-text {
+    margin-top: 140px;
+}
+
+.game-text {
+    margin-bottom: 40px;
+}
+
+#heroImg{
+    display: block;
+    width: 50%;
+    margin: 50px auto 10px auto;
+}
+
+.jumbotron {
+    border-bottom: 5px solid #ffffff;
+}
+
 #reset-game {
     width: 100%;
+    margin-top: 20px;
     margin-bottom: 20px;
 }
+

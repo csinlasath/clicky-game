@@ -18,7 +18,9 @@ class Masthead extends Component {
             clickNumber: 0,
             firstClickId: '',
             secondClickId: '',
-            foundMatch: false
+            clickedGifsArr: [],
+            foundMatch: false,
+            matchedGifId: []
         }
     }
 
@@ -41,8 +43,8 @@ class Masthead extends Component {
             const queryURL = `https://api.giphy.com/v1/gifs/search?q=${this.state.gifSearchField}&limit=15&api_key=${APIKey}`;
 
             let component = this;
-            let resultsArr = [];   
-            let tempArr = [];  
+            let resultsArr = [];
+            let tempArr = [];
             const xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function () {
                 if (this.readyState === 4 && this.status === 200) {
@@ -63,7 +65,7 @@ class Masthead extends Component {
                         matchedArr.sort(function (a, b) {
                             return 0.5 - Math.random()
                         });
-    
+
                         component.setState({
                             gifSearchResults: matchedArr,
                             gifSearchField: '',
@@ -71,6 +73,7 @@ class Masthead extends Component {
                             gameStart: true
                         });
                         console.log(component.state);
+                        window.location.assign('#reset-game');
                     }
                     else {
                         component.setState({
@@ -78,7 +81,7 @@ class Masthead extends Component {
                             gifSearchField: '',
                             hasSearched: false,
                             gameStart: false
-                        }); 
+                        });
                     }
                 }
             }
@@ -93,7 +96,7 @@ class Masthead extends Component {
                 return 'btn btn-outline-danger disabled';
             }
             else {
-                return 'btn btn-outline-danger disabled';
+                return 'btn btn-outline-danger';
             }
         }
         else {
@@ -102,40 +105,78 @@ class Masthead extends Component {
     }
 
     checkForMatch = (e) => {
+        console.log(this.state.clickNumber);
+        let clickedArr = this.state.clickedGifsArr;
+
         if (this.state.clickNumber === 0) {
+            clickedArr.push(e);
             this.setState((state) => ({
                 firstClickId: e,
+                clickedGifsArr: clickedArr,
                 clickNumber: state.clickNumber + 1
             }), () => console.log(this.state));
         }
         if (this.state.clickNumber === 1) {
-            this.setState((state) => ({
-                secondClickId: e,
-                clickNumber: 0
-            }), () => {
-                console.log(this.state);
-                if (this.state.firstClickId === this.state.secondClickId) {
-                    console.log('Found a match!');
-                    this.setState({
-                        foundMatch: true
-                    });
-                }
-            });
+            if (clickedArr.indexOf(e) === -1) {
+                clickedArr.push(e);
+                this.setState((state) => ({
+                    secondClickId: e,
+                    clickedGifsArr: clickedArr,
+                    clickNumber: state.clickNumber + 1
+                }), () => {
+                    console.log(this.state);
+                    if (this.shortenDataId(this.state.firstClickId) === this.shortenDataId(this.state.secondClickId)) {
+                        console.log('Found a match!');
+                        let matchedArr = this.state.matchedGifId;
+                        matchedArr.push(this.state.firstClickId);
+                        matchedArr.push(this.state.secondClickId);
+                        this.setState((state) => ({
+                            foundMatch: true,
+                            matchedGifId: matchedArr,
+                            clickNumber: state.clickNumber - 2,
+                            clickedGifsArr: []
+                        }), () => {
+                            console.log(this.state);
+                        });
+                    }
+                    else {
+                        this.setState((state) => ({
+                            clickNumber: state.clickNumber - 2,
+                            firstClickId: '',
+                            secondClickId: '',
+                            foundMatch: false,
+                            clickedGifsArr: []
+                        }), () => {
+                            console.log(this.state);
+                        });
+                    }
+                });
+            }
         }
-        // if (this.state.clickNumber === 1) {
-        //     this.setState({
-        //         secondClickId: e,
-        //         clickNumber: 2
-        //     }, () => {
-        //         console.log(this.state)
-        //         if (this.state.firstClickId === this.state.secondClickId) {
-        //             console.log("Found a match!");
-        //             this.setState({
-        //                 clickNumber: 0
-        //             });
-        //         }
-        //     });
-        // }
+    }
+
+    checkMatchedGifs = (gifId) => {
+        let matchedArr = this.state.matchedGifId;
+        let dataId = gifId;
+
+        if (matchedArr.indexOf(dataId) !== -1) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    checkForClicked = (gifId) => {
+        let clickedArr = this.state.clickedGifsArr;
+        let dataId = gifId;
+
+        if (clickedArr.indexOf(dataId) !== -1) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     shortenDataId = (gifId) => {
@@ -152,26 +193,31 @@ class Masthead extends Component {
         if (this.state.gifSearchResults.length >= 30) {
             return (
                 <Fragment>
-                    <div className='jumbotron jumbotron-fluid bg-dark'>
-                        <div className='container'>
-                            <form>
-                                <div className='form-group'>
-                                    <label htmlFor='gifSearch' className='text-light'>Search for Gif</label>
-                                    <div className='input-group mb-2 mr-sm-2'>
-                                        <input type='text' name='gifSearchField' className='form-control' id='gifSearch' placeholder='Search for a Gif' value={this.state.gifSearchField} onChange={this.formStateChange}></input>
-                                        <div className='input-group-append'>
-                                            <button type='submit' className={this.disableSearch()} id='submitGif' onClick={this.submitSearch}>Search</button>
+                    <img src='https://www.mimeo.com/wp-content/uploads/2016/10/Giphy.png' alt='Giphy Logo' id='heroImg'></img>
+                    <p className='lead text-light text-center'>Concentration Game</p>
+                    {this.state.matchedGifId.length === 0 ? (
+                        <div className='jumbotron jumbotron-fluid bg-dark'>
+                            <div className='container'>
+                                <form>
+                                    <div className='form-group'>
+                                        <label htmlFor='gifSearch' className='text-light'>Search for Gif</label>
+                                        <div className='input-group mb-2 mr-sm-2'>
+                                            <input type='text' name='gifSearchField' className='form-control' id='gifSearch' placeholder='Search for a Gif' value={this.state.gifSearchField} onChange={this.formStateChange}></input>
+                                            <div className='input-group-append'>
+                                                <button type='submit' className={this.disableSearch()} id='submitGif' onClick={this.submitSearch}>Search</button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    ) : <div></div>}
                     <GameBoard>
+                        {this.state.matchedGifId.length === 30 ? <h1 className='text-center text-light game-text'>You Win!</h1> : <h1 className='text-center text-light game-text'>Match All The Gifs to Win!</h1>}
                         <CardDeck>
                             {this.state.gifSearchResults.map((gifCard, index) => {
                                 if (index <= 5) {
-                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={this.shortenDataId(gifCard.id)} isMatched={false} checkForMatch={(e) => this.checkForMatch(e)}/>
+                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={gifCard.id} isMatched={this.checkMatchedGifs(gifCard.id)} isClicked={this.checkForClicked(gifCard.id)} checkForMatch={(e) => this.checkForMatch(e)} />
                                 }
                                 else {
                                     return (
@@ -183,7 +229,7 @@ class Masthead extends Component {
                         <CardDeck>
                             {this.state.gifSearchResults.map((gifCard, index) => {
                                 if (index > 5 && index <= 11) {
-                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={this.shortenDataId(gifCard.id)} isMatched={false} checkForMatch={(e) => this.checkForMatch(e)} />
+                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={gifCard.id} isMatched={this.checkMatchedGifs(gifCard.id)} isClicked={this.checkForClicked(gifCard.id)} checkForMatch={(e) => this.checkForMatch(e)} />
                                 }
                                 else {
                                     return (
@@ -195,7 +241,7 @@ class Masthead extends Component {
                         <CardDeck>
                             {this.state.gifSearchResults.map((gifCard, index) => {
                                 if (index > 11 && index <= 17) {
-                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={this.shortenDataId(gifCard.id)} isMatched={false} checkForMatch={(e) => this.checkForMatch(e)} />
+                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={gifCard.id} isMatched={this.checkMatchedGifs(gifCard.id)} isClicked={this.checkForClicked(gifCard.id)} checkForMatch={(e) => this.checkForMatch(e)} />
                                 }
                                 else {
                                     return (
@@ -207,7 +253,7 @@ class Masthead extends Component {
                         <CardDeck>
                             {this.state.gifSearchResults.map((gifCard, index) => {
                                 if (index > 17 && index <= 23) {
-                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={this.shortenDataId(gifCard.id)} isMatched={false} checkForMatch={(e) => this.checkForMatch(e)} />
+                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={gifCard.id} isMatched={this.checkMatchedGifs(gifCard.id)} isClicked={this.checkForClicked(gifCard.id)} checkForMatch={(e) => this.checkForMatch(e)} />
                                 }
                                 else {
                                     return (
@@ -219,7 +265,7 @@ class Masthead extends Component {
                         <CardDeck>
                             {this.state.gifSearchResults.map((gifCard, index) => {
                                 if (index > 23 && index <= 29) {
-                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={this.shortenDataId(gifCard.id)} isMatched={false} checkForMatch={(e) => this.checkForMatch(e)} />
+                                    return <GifCard key={`${gifCard.id}`} gifImage={gifCard.images.fixed_height.url} gifTitle={index + 1} dataId={gifCard.id} isMatched={this.checkMatchedGifs(gifCard.id)} isClicked={this.checkForClicked(gifCard.id)} checkForMatch={(e) => this.checkForMatch(e)} />
                                 }
                                 else {
                                     return (
@@ -236,6 +282,8 @@ class Masthead extends Component {
         else if ((this.state.gifSearchResults.length > 2) && (this.state.gifSearchResults.length < 30)) {
             return (
                 <Fragment>
+                    <img src='https://www.mimeo.com/wp-content/uploads/2016/10/Giphy.png' alt='Giphy Logo' id='heroImg'></img>
+                    <p className='lead text-light text-center'>Concentration Game</p>
                     <div className='jumbotron jumbotron-fluid bg-dark'>
                         <div className='container'>
                             <form>
@@ -252,7 +300,7 @@ class Masthead extends Component {
                         </div>
                     </div>
                     <GameBoard>
-                        <h2>Not Enough Gifs to fill the board.  Try Searching again!</h2>
+                        <h2 className='text-light'>Not Enough Gifs to fill the board.  Try Searching again!</h2>
                     </GameBoard>
                 </Fragment>
             )
@@ -260,23 +308,27 @@ class Masthead extends Component {
         else {
             return (
                 <Fragment>
-                    <div className='jumbotron jumbotron-fluid bg-dark'>
-                        <div className='container'>
-                            <form>
-                                <div className='form-group'>
-                                    <label htmlFor='gifSearch' className='text-light'>Search for Gif</label>
-                                    <div className='input-group mb-2 mr-sm-2'>
-                                        <input type='text' name='gifSearchField' className='form-control' id='gifSearch' placeholder='Search for a Gif' value={this.state.gifSearchField} onChange={this.formStateChange}></input>
-                                        <div className='input-group-append'>
-                                            <button type='submit' className={this.disableSearch()} id='submitGif' onClick={this.submitSearch}>Search</button>
+                    <img src='https://www.mimeo.com/wp-content/uploads/2016/10/Giphy.png' alt='Giphy Logo' id='heroImg'></img>
+                    <p className='lead text-light text-center'>Concentration Game</p>
+                    {this.state.matchedGifId.length === 0 ? (
+                        <div className='jumbotron jumbotron-fluid bg-dark'>
+                            <div className='container'>
+                                <form>
+                                    <div className='form-group'>
+                                        <label htmlFor='gifSearch' className='text-light'>Search for Gif</label>
+                                        <div className='input-group mb-2 mr-sm-2'>
+                                            <input type='text' name='gifSearchField' className='form-control' id='gifSearch' placeholder='Search for a Gif' value={this.state.gifSearchField} onChange={this.formStateChange}></input>
+                                            <div className='input-group-append'>
+                                                <button type='submit' className={this.disableSearch()} id='submitGif' onClick={this.submitSearch}>Search</button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    ) : <div></div>}
                     <GameBoard>
-                        <h2>Search for Gifs to Start</h2>
+                        <h2 className='text-light' id='empty-text'>Search for Gifs to Start</h2>
                     </GameBoard>
                 </Fragment>
             )
