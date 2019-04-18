@@ -195,7 +195,7 @@ class Masthead extends Component {
                 <Fragment>
                     <img src='https://www.mimeo.com/wp-content/uploads/2016/10/Giphy.png' alt='Giphy Logo' id='heroImg'></img>
                     <p className='lead text-light text-center'>Concentration Game</p>
-                    {this.state.matchedGifId.length === 0 ? (
+                    {this.state.matchedGifId.length >= 1 ? (
                         <div className='jumbotron jumbotron-fluid bg-dark'>
                             <div className='container'>
                                 <form>
