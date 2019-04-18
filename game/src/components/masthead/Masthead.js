@@ -186,7 +186,7 @@ class Masthead extends Component {
 
     resetGame = () => {
         document.getElementById('game-board').innerHTML = '';
-        window.location.assign('/');
+        window.location.assign('/clicky-game/');
     }
 
     render() {
